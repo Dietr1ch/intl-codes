@@ -1,0 +1,9 @@
+#+title: International Codes
+
+Various enums for handling
+
+* Tasks
+** TODO Add MIT License
+** TODO Add languages
+** TODO Add telephone prefixes
+** TODO Add country top-level domains

@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+import argparse
+import pathlib
+import re
+
+import polars as pl
+
+RE_EXTRAS = re.compile(r"[\(\[].*[\]\)]")
+
+
+def to_pascal(word):
+    word = re.sub(RE_EXTRAS, "", word)
+    return (
+        word.replace("Å", "A")
+        .replace("ô", "o")
+        .replace("é", "e")
+        .title()
+        .replace(",", "")
+        .replace("'", "")
+        .replace("-", "")
+        .replace(" ", "")
+    )
+
+
+# ../data/country_codes.csv
+ARG_PARSER = argparse.ArgumentParser(prog="country_codes", usage="%(prog)s [options]")
+ARG_PARSER.add_argument("data_csv_path", nargs="+", type=pathlib.Path, help="bar help")
+ARGS = ARG_PARSER.parse_args()
+
+
+def main():
+    print("use serde::Deserialize;")
+    print("use serde::Serialize;")
+    print("use strum::EnumString;")
+
+    print()
+    # pub enum Country {
+    # 	...
+    # }
+    print(
+        "#[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Serialize, Deserialize, EnumString)]"
+    )
+    print("pub enum Country {")
+
+    for path in ARGS.data_csv_path:
+        data = pl.read_csv(path, separator=",")
+        for row in data.iter_rows(named=True):
+            # "Country","Alpha-2 code","Alpha-3 code","Numeric"
+            name = to_pascal(row["Country"])
+            code2 = row["Alpha-2 code"]
+            code3 = row["Alpha-3 code"]
+            num = row["Numeric"]
+
+            # 	#[strum(serialize = "CL", serialize = "CHL")]
+            print(
+                f'\t#[strum(serialize = "{code2}", serialize = "{code3}", serialize = "{num}")]'
+            )
+            # 	Chile,
+            print(f"\t{name},")
+
+    print("}")
+
+
+if __name__ == "__main__":
+    main()
